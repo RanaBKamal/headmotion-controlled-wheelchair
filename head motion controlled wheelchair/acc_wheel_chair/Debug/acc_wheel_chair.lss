@@ -1,0 +1,311 @@
+
+acc_wheel_chair.elf:     file format elf32-avr
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .text         00000108  00000000  00000000  00000054  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .comment      00000030  00000000  00000000  0000015c  2**0
+                  CONTENTS, READONLY
+  2 .debug_aranges 000000a0  00000000  00000000  0000018c  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  3 .debug_info   0000042f  00000000  00000000  0000022c  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  4 .debug_abbrev 00000256  00000000  00000000  0000065b  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  5 .debug_line   00000352  00000000  00000000  000008b1  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  6 .debug_frame  000000ec  00000000  00000000  00000c04  2**2
+                  CONTENTS, READONLY, DEBUGGING
+  7 .debug_str    0000022d  00000000  00000000  00000cf0  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  8 .debug_loc    00000065  00000000  00000000  00000f1d  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  9 .debug_ranges 00000070  00000000  00000000  00000f82  2**0
+                  CONTENTS, READONLY, DEBUGGING
+
+Disassembly of section .text:
+
+00000000 <__vectors>:
+   0:	12 c0       	rjmp	.+36     	; 0x26 <__ctors_end>
+   2:	19 c0       	rjmp	.+50     	; 0x36 <__bad_interrupt>
+   4:	18 c0       	rjmp	.+48     	; 0x36 <__bad_interrupt>
+   6:	17 c0       	rjmp	.+46     	; 0x36 <__bad_interrupt>
+   8:	16 c0       	rjmp	.+44     	; 0x36 <__bad_interrupt>
+   a:	15 c0       	rjmp	.+42     	; 0x36 <__bad_interrupt>
+   c:	14 c0       	rjmp	.+40     	; 0x36 <__bad_interrupt>
+   e:	13 c0       	rjmp	.+38     	; 0x36 <__bad_interrupt>
+  10:	12 c0       	rjmp	.+36     	; 0x36 <__bad_interrupt>
+  12:	11 c0       	rjmp	.+34     	; 0x36 <__bad_interrupt>
+  14:	10 c0       	rjmp	.+32     	; 0x36 <__bad_interrupt>
+  16:	0f c0       	rjmp	.+30     	; 0x36 <__bad_interrupt>
+  18:	0e c0       	rjmp	.+28     	; 0x36 <__bad_interrupt>
+  1a:	0d c0       	rjmp	.+26     	; 0x36 <__bad_interrupt>
+  1c:	0c c0       	rjmp	.+24     	; 0x36 <__bad_interrupt>
+  1e:	0b c0       	rjmp	.+22     	; 0x36 <__bad_interrupt>
+  20:	0a c0       	rjmp	.+20     	; 0x36 <__bad_interrupt>
+  22:	09 c0       	rjmp	.+18     	; 0x36 <__bad_interrupt>
+  24:	08 c0       	rjmp	.+16     	; 0x36 <__bad_interrupt>
+
+00000026 <__ctors_end>:
+  26:	11 24       	eor	r1, r1
+  28:	1f be       	out	0x3f, r1	; 63
+  2a:	cf e5       	ldi	r28, 0x5F	; 95
+  2c:	d4 e0       	ldi	r29, 0x04	; 4
+  2e:	de bf       	out	0x3e, r29	; 62
+  30:	cd bf       	out	0x3d, r28	; 61
+  32:	12 d0       	rcall	.+36     	; 0x58 <main>
+  34:	67 c0       	rjmp	.+206    	; 0x104 <_exit>
+
+00000036 <__bad_interrupt>:
+  36:	e4 cf       	rjmp	.-56     	; 0x0 <__vectors>
+
+00000038 <initAccelerometerPorts>:
+#include <avr/io.h>
+#include "accelerometer.h"
+
+void initAccelerometerPorts(){
+	ADMUX|=(1<<REFS0);
+  38:	3e 9a       	sbi	0x07, 6	; 7
+	ADCSRA|=(1<<ADEN)|(1<<ADPS0)|(1<<ADPS1)|(1<<ADPS2); //ENABLE ADC, PRESCALER 128
+  3a:	86 b1       	in	r24, 0x06	; 6
+  3c:	87 68       	ori	r24, 0x87	; 135
+  3e:	86 b9       	out	0x06, r24	; 6
+  40:	08 95       	ret
+
+00000042 <readAdc>:
+}
+uint16_t readAdc(uint8_t ch)
+{
+	ch &= 0b00000111;         //ANDing to limit input to 75.1
+	ADMUX = (ADMUX & 0xf8)|ch;  //Clear last 3 bits of ADMUX, OR with ch
+  42:	97 b1       	in	r25, 0x07	; 7
+	ADMUX|=(1<<REFS0);
+	ADCSRA|=(1<<ADEN)|(1<<ADPS0)|(1<<ADPS1)|(1<<ADPS2); //ENABLE ADC, PRESCALER 128
+}
+uint16_t readAdc(uint8_t ch)
+{
+	ch &= 0b00000111;         //ANDing to limit input to 75.1
+  44:	87 70       	andi	r24, 0x07	; 7
+	ADMUX = (ADMUX & 0xf8)|ch;  //Clear last 3 bits of ADMUX, OR with ch
+  46:	98 7f       	andi	r25, 0xF8	; 248
+  48:	98 2b       	or	r25, r24
+  4a:	97 b9       	out	0x07, r25	; 7
+	ADCSRA |= (1<<ADSC);        //START CONVERSION
+  4c:	36 9a       	sbi	0x06, 6	; 6
+	while((ADCSRA)&(1<<ADSC));    //WAIT UNTIL CONVERSION IS COMPLETE
+  4e:	36 99       	sbic	0x06, 6	; 6
+  50:	fe cf       	rjmp	.-4      	; 0x4e <readAdc+0xc>
+	return(ADC);        //RETURN ADC VALUE
+  52:	84 b1       	in	r24, 0x04	; 4
+  54:	95 b1       	in	r25, 0x05	; 5
+  56:	08 95       	ret
+
+00000058 <main>:
+
+int main(void)
+{
+	
+	
+	initPWMPorts();
+  58:	26 d0       	rcall	.+76     	; 0xa6 <initPWMPorts>
+	initControlPorts();
+  5a:	3a d0       	rcall	.+116    	; 0xd0 <initControlPorts>
+	initAccelerometerPorts();
+  5c:	ed df       	rcall	.-38     	; 0x38 <initAccelerometerPorts>
+	staySteady();
+  5e:	48 d0       	rcall	.+144    	; 0xf0 <staySteady>
+	#else
+		//round up by default
+		__ticks_dc = (uint32_t)(ceil(fabs(__tmp)));
+	#endif
+
+	__builtin_avr_delay_cycles(__ticks_dc);
+  60:	2f e7       	ldi	r18, 0x7F	; 127
+  62:	8a e1       	ldi	r24, 0x1A	; 26
+  64:	96 e0       	ldi	r25, 0x06	; 6
+  66:	21 50       	subi	r18, 0x01	; 1
+  68:	80 40       	sbci	r24, 0x00	; 0
+  6a:	90 40       	sbci	r25, 0x00	; 0
+  6c:	e1 f7       	brne	.-8      	; 0x66 <main+0xe>
+  6e:	00 c0       	rjmp	.+0      	; 0x70 <main+0x18>
+  70:	00 00       	nop
+	_delay_ms(2000);
+	uint16_t x,y,z;
+    while(1)
+    {
+		x = readAdc(0);
+  72:	80 e0       	ldi	r24, 0x00	; 0
+  74:	e6 df       	rcall	.-52     	; 0x42 <readAdc>
+  76:	ec 01       	movw	r28, r24
+		y = readAdc(1);
+  78:	81 e0       	ldi	r24, 0x01	; 1
+  7a:	e3 df       	rcall	.-58     	; 0x42 <readAdc>
+  7c:	8c 01       	movw	r16, r24
+		z = readAdc(2);
+  7e:	82 e0       	ldi	r24, 0x02	; 2
+  80:	e0 df       	rcall	.-64     	; 0x42 <readAdc>
+		
+		
+        if (x > 350)
+  82:	cf 35       	cpi	r28, 0x5F	; 95
+  84:	21 e0       	ldi	r18, 0x01	; 1
+  86:	d2 07       	cpc	r29, r18
+  88:	10 f0       	brcs	.+4      	; 0x8e <main+0x36>
+        {
+			turnRight();	
+  8a:	37 d0       	rcall	.+110    	; 0xfa <turnRight>
+  8c:	f2 cf       	rjmp	.-28     	; 0x72 <main+0x1a>
+        }else if (x < 333)
+  8e:	cd 34       	cpi	r28, 0x4D	; 77
+  90:	d1 40       	sbci	r29, 0x01	; 1
+  92:	10 f4       	brcc	.+4      	; 0x98 <main+0x40>
+        {
+			turnLeft();
+  94:	2f d0       	rcall	.+94     	; 0xf4 <turnLeft>
+  96:	ed cf       	rjmp	.-38     	; 0x72 <main+0x1a>
+        }else if(y < 333){
+  98:	0d 34       	cpi	r16, 0x4D	; 77
+  9a:	11 40       	sbci	r17, 0x01	; 1
+  9c:	10 f4       	brcc	.+4      	; 0xa2 <main+0x4a>
+			goAhead();
+  9e:	30 d0       	rcall	.+96     	; 0x100 <goAhead>
+  a0:	e8 cf       	rjmp	.-48     	; 0x72 <main+0x1a>
+		}else{
+			staySteady();
+  a2:	26 d0       	rcall	.+76     	; 0xf0 <staySteady>
+  a4:	e6 cf       	rjmp	.-52     	; 0x72 <main+0x1a>
+
+000000a6 <initPWMPorts>:
+
+//function for initialization of the PWM ports
+void initPWMPorts(){
+	
+	//defining the PWM  pins for outputs
+	DATA_DIRECTION_MOTOR_PWM |= (1 << DDB1);
+  a6:	b9 9a       	sbi	0x17, 1	; 23
+	DATA_DIRECTION_MOTOR_PWM |= (1 << DDB2);
+  a8:	ba 9a       	sbi	0x17, 2	; 23
+
+	// set PWM for 50% duty cycle @ 10bit
+	OCR1A = 0x4FFF;
+  aa:	8f ef       	ldi	r24, 0xFF	; 255
+  ac:	9f e4       	ldi	r25, 0x4F	; 79
+  ae:	9b bd       	out	0x2b, r25	; 43
+  b0:	8a bd       	out	0x2a, r24	; 42
+	OCR1B =	0x4FFF;
+  b2:	99 bd       	out	0x29, r25	; 41
+  b4:	88 bd       	out	0x28, r24	; 40
+	
+	// set none-inverting mode
+	TCCR1A |= (1 << COM1A1) | (1 << COM1B1);
+  b6:	8f b5       	in	r24, 0x2f	; 47
+  b8:	80 6a       	ori	r24, 0xA0	; 160
+  ba:	8f bd       	out	0x2f, r24	; 47
+	
+	// set 10bit phase corrected PWM Mode
+	TCCR1A |= (1 << WGM11) | (1 << WGM10);
+  bc:	8f b5       	in	r24, 0x2f	; 47
+  be:	83 60       	ori	r24, 0x03	; 3
+  c0:	8f bd       	out	0x2f, r24	; 47
+	TCCR1B |= (1 << WGM11) | (1 << WGM10);
+  c2:	8e b5       	in	r24, 0x2e	; 46
+  c4:	83 60       	ori	r24, 0x03	; 3
+  c6:	8e bd       	out	0x2e, r24	; 46
+	
+	// set prescaler to 8 and starts PWM
+	TCCR1B |= (1 << CS11);
+  c8:	8e b5       	in	r24, 0x2e	; 46
+  ca:	82 60       	ori	r24, 0x02	; 2
+  cc:	8e bd       	out	0x2e, r24	; 46
+  ce:	08 95       	ret
+
+000000d0 <initControlPorts>:
+}
+
+//function for initialization of the motor control ports
+void initControlPorts(){
+	//defining the ports to be output control of the motor
+	DATA_DIRECTION_MOTOR_CONTROL |= 0x35;
+  d0:	81 b3       	in	r24, 0x11	; 17
+  d2:	85 63       	ori	r24, 0x35	; 53
+  d4:	81 bb       	out	0x11, r24	; 17
+	
+	//initially making the motor disabled 
+	DATA_OUTPUT_MOTOR_CONTROL |= (1<<PIND2) | (1<<PIND5); 
+  d6:	82 b3       	in	r24, 0x12	; 18
+  d8:	84 62       	ori	r24, 0x24	; 36
+  da:	82 bb       	out	0x12, r24	; 18
+	
+	//and two control pins output low
+	DATA_OUTPUT_MOTOR_CONTROL &= ~(1<<PIND0);
+  dc:	90 98       	cbi	0x12, 0	; 18
+	DATA_OUTPUT_MOTOR_CONTROL &= ~(1<<PIND4);
+  de:	94 98       	cbi	0x12, 4	; 18
+  e0:	08 95       	ret
+
+000000e2 <enableMotor>:
+}
+
+
+void enableMotor(){
+	DATA_OUTPUT_MOTOR_CONTROL |= (1<<PIND2) | (1<<PIND5);
+  e2:	82 b3       	in	r24, 0x12	; 18
+  e4:	84 62       	ori	r24, 0x24	; 36
+  e6:	82 bb       	out	0x12, r24	; 18
+  e8:	08 95       	ret
+
+000000ea <disableMotor>:
+}
+void disableMotor(){
+	DATA_OUTPUT_MOTOR_CONTROL &= ~(1<< PIND2);
+  ea:	92 98       	cbi	0x12, 2	; 18
+	DATA_OUTPUT_MOTOR_CONTROL &= ~(1<< PIND5);
+  ec:	95 98       	cbi	0x12, 5	; 18
+  ee:	08 95       	ret
+
+000000f0 <staySteady>:
+
+
+//funcion to stop both the motors
+void staySteady(){
+	//just disable the motors 
+	disableMotor();
+  f0:	fc df       	rcall	.-8      	; 0xea <disableMotor>
+  f2:	08 95       	ret
+
+000000f4 <turnLeft>:
+}
+
+void turnLeft(){
+	//to turn left the motor just disable one and enable other
+	DATA_OUTPUT_MOTOR_CONTROL |= (1<<PIND2);
+  f4:	92 9a       	sbi	0x12, 2	; 18
+	DATA_OUTPUT_MOTOR_CONTROL &= ~(1<< PIND5);
+  f6:	95 98       	cbi	0x12, 5	; 18
+  f8:	08 95       	ret
+
+000000fa <turnRight>:
+	
+}
+void turnRight(){
+	//to turn left the motor just disable one and enable other
+	DATA_OUTPUT_MOTOR_CONTROL |= (1<<PIND5);
+  fa:	95 9a       	sbi	0x12, 5	; 18
+	DATA_OUTPUT_MOTOR_CONTROL &= ~(1<< PIND2);
+  fc:	92 98       	cbi	0x12, 2	; 18
+  fe:	08 95       	ret
+
+00000100 <goAhead>:
+}
+//function to rotate both the motors
+void goAhead(){
+	enableMotor();
+ 100:	f0 df       	rcall	.-32     	; 0xe2 <enableMotor>
+ 102:	08 95       	ret
+
+00000104 <_exit>:
+ 104:	f8 94       	cli
+
+00000106 <__stop_program>:
+ 106:	ff cf       	rjmp	.-2      	; 0x106 <__stop_program>
